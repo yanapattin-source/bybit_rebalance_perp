@@ -22,6 +22,7 @@ API_SECRET = os.getenv("BYBIT_API_SECRET", "")
 TESTNET    = True   # True=testnet; False=mainnet
 DRY_RUN    = True   # True=no orders placed
 SYMBOL_CCXT = "BTC/USDT"
+MARGIN_CCY = SYMBOL_CCXT.split("/")[1]  # currency used for margin and ledger queries
 TIMEFRAME = "1m"         # Timeframe for OHLCV, ATR, EMA calculations (e.g. "1m", "5m", "15m")
 TARGET_NOTIONAL = 3000.0      # Target quote exposure in USDT
 LEVERAGE = 3                  # Leverage to use
@@ -284,7 +285,8 @@ def compute_and_maybe_rebalance():
         # Fetch ledger entries (last 24h) for PnL accounting
         try:
             since_ledger = int((time.time() - 86400) * 1000)
-            ledger_entries = exchange.fetch_ledger(SYMBOL_CCXT, since=since_ledger, limit=200)
+            # fetch ledger for the margin currency (e.g., USDT) rather than the trading symbol
+            ledger_entries = exchange.fetch_ledger(MARGIN_CCY, since=since_ledger, limit=200)
             ledger_tracker.ingest_ledger_batch(ledger_entries)
         except Exception as e:
             print("Error fetching ledger entries:", e)
